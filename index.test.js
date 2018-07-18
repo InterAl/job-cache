@@ -109,6 +109,40 @@ describe('test', () => {
         });
     });
 
+    it('should evaluate the 2nd job, given 1st job throwed an error', async () => {
+        cache.add({
+            key: 'foo',
+            action: () => {throw Error('Error');}
+        });
+
+        cache.add({
+            key: 'foo',
+            action: () => 42
+        });
+
+        await waitForAssert(() => {
+            assert.equal(cache.get('foo'), 42);
+        });
+    });
+
+    it('should evaluate the 2nd job, given 1st job promise rejected', async () => {
+        cache.add({
+            key: 'foo',
+            action: () => Promise.reject('Error')
+        });
+
+        setTimeout(() => {
+            cache.add({
+                key: 'foo',
+                action: () => 42
+            });
+        }, 50);
+
+        await waitForAssert(() => {
+            assert.equal(cache.get('foo'), 42);
+        });
+    });
+
     function delayResolve(data, delay) {
         return new Promise(resolve => setTimeout(() => resolve(data), delay));
     }

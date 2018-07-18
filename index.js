@@ -2,16 +2,28 @@ function createCache() {
     const cache = {};
     const runningJobs = {};
 
-    function processJob(key, job) {
-        Promise.resolve(job.action()).then(result => {
-            cache[key] = {
-                result,
-                cooldown: job.cooldown,
-                lastRun: new Date()
-            };
+    function clearJob(key) {
+        delete runningJobs[key];
+    }
 
-            delete runningJobs[key];
-        });
+    function processJob(key, job) {
+        try {
+            Promise.resolve(job.action()).then(result => {
+                cache[key] = {
+                    result,
+                    cooldown: job.cooldown,
+                    lastRun: new Date()
+                };
+
+                clearJob(key);
+            }).catch(err => {
+                console.error('[job-cache] ' + key, err);
+                clearJob(key);
+            })
+        } catch (err) {
+            console.error('[job-cache] ' + key, err);
+            clearJob(key);
+        }
     }
 
     const api = {
