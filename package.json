@@ -1,14 +1,18 @@
 {
   "name": "job-cache",
   "version": "1.0.0",
-  "description": "",
+  "description": "A job queue that caches the job's result",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InterAl/job-cache.git"
+  },
   "scripts": {
     "test": "./node_modules/mocha/bin/_mocha ./**/*.test.js",
     "test:watch": "./node_modules/mocha/bin/_mocha --watch ./**/*.test.js",
     "test:watchSingle": "./node_modules/mocha/bin/_mocha --watch"
   },
-  "author": "",
+  "author": "InterAl",
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.1.2",
