@@ -1,0 +1,18 @@
+{
+  "name": "job-cache",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/mocha/bin/_mocha ./**/*.test.js",
+    "test:watch": "./node_modules/mocha/bin/_mocha --watch ./**/*.test.js",
+    "test:watchSingle": "./node_modules/mocha/bin/_mocha --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "wait-for-cond": "^1.5.1"
+  }
+}
