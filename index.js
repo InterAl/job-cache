@@ -1,25 +1,17 @@
 function createCache() {
     const cache = {};
-    const queue = {};
+    const runningJobs = {};
 
-    function startConsumingQueue(interval) {
-        const keys = Object.keys(queue);
-        for (const key of keys) {
-            const job = queue[key];
-            if (job && job.action) {
-                Promise.resolve(job.action()).then(result => {
-                    cache[key] = {
-                        result,
-                        cooldown: job.cooldown,
-                        lastRun: new Date()
-                    };
+    function processJob(key, job) {
+        Promise.resolve(job.action()).then(result => {
+            cache[key] = {
+                result,
+                cooldown: job.cooldown,
+                lastRun: new Date()
+            };
 
-                    delete queue[key];
-                });
-            }
-        }
-
-        setTimeout(startConsumingQueue, 50);
+            delete runningJobs[key];
+        });
     }
 
     const api = {
@@ -34,7 +26,7 @@ function createCache() {
         },
         add({key, action, cooldown}) {
             const cachedResult = cache[key];
-            const jobExists = Boolean(queue[key]);
+            const jobExists = Boolean(runningJobs[key]);
 
             if (!jobExists) {
                 let cooldownElapsed = true;
@@ -44,16 +36,15 @@ function createCache() {
                 }
 
                 if (cooldownElapsed) {
-                    queue[key] = {
+                    runningJobs[key] = true;
+                    processJob(key, {
                         action,
                         cooldown
-                    };
+                    });
                 }
             }
         }
     };
-
-    startConsumingQueue();
 
     return api;
 }

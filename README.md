@@ -16,7 +16,7 @@ const cache = createCache();
 // key if the cooldown is still in effect - counted from the job's finish time)
 cache.add({
     key: 'foo',
-    action: Promise.resolve('result'),
+    action: () => Promise.resolve('result'),
     cooldown: 1500
 });
 
