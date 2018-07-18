@@ -7,7 +7,6 @@ $ npm i -S job-cache
 ```
 
 # Usage
-The promise resolves if the condition is met at least once in the specified duration, and rejects otherwise.
 
 ```javascript
 const createCache = require('job-cache');
