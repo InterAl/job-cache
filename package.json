@@ -1,6 +1,6 @@
 {
   "name": "job-cache",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A job queue that caches the job's result",
   "main": "index.js",
   "repository": {
