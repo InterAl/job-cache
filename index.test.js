@@ -35,6 +35,25 @@ describe('test', () => {
         });
     });
 
+    it('getAll', () => {
+        cache.add({
+            key: 'foo',
+            action: () => 'fooResult'
+        });
+
+        cache.add({
+            key: 'bar',
+            action: () => 'barResult'
+        });
+
+        return waitForAssert(() => {
+            assert.deepEqual(cache.getAll('foo'), {
+                foo: 'fooResult',
+                bar: 'barResult'
+            });
+        });
+    });
+
     it('should not reschedule an already-queued job-key', () => {
         let fn2Called = false;
 
