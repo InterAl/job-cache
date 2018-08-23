@@ -1,6 +1,50 @@
-function createCache() {
+function createCache({requestsPerSecond} = {}) {
     const cache = {};
     const runningJobs = {};
+    const queue = {};
+    let isConsuming = false;
+
+    const consumptionRate = 1000 / requestsPerSecond;
+
+    function consumeQueue() {
+        if (isConsuming)
+            return;
+
+        isConsuming = true;
+
+        (function iter() {
+            const hasMore = Object.keys(queue).length > 0;
+
+            if (hasMore) {
+                const {key, job} = dequeue();
+
+                processJob(key, job);
+
+                if (requestsPerSecond > 0) {
+                    setTimeout(iter, consumptionRate);
+                } else {
+                    iter();
+                }
+            } else {
+                isConsuming = false;
+            }
+        })();
+    }
+
+    function enqueue(key, job) {
+        queue[key] = job;
+        consumeQueue();
+    }
+
+    function dequeue() {
+        const keys = Object.keys(queue);
+        const lastKey = keys[keys.length - 1];
+        const job = queue[lastKey];
+
+        delete queue[lastKey];
+
+        return {key: lastKey, job};
+    }
 
     function clearJob(key) {
         delete runningJobs[key];
@@ -58,7 +102,7 @@ function createCache() {
             const jobExists = Boolean(runningJobs[key]);
 
             if (!jobExists) {
-                processJob(key, {
+                enqueue(key, {
                     action,
                     cooldown
                 });

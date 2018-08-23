@@ -166,6 +166,26 @@ describe('test', () => {
         assert.equal(result, 42);
     });
 
+    it('requestsPerSec - limit the requests per second', async () => {
+        const cache = createCache({
+            requestsPerSecond: 5
+        });
+
+        for (let i = 0; i < 100; i++) {
+            cache.add({
+                key: i,
+                action: () => i,
+                cooldown: 10000
+            });
+        }
+
+        await delayResolve(undefined, 1000);
+
+        const totalKeys = Object.keys(cache.getAll()).length;
+        assert.isAtLeast(totalKeys, 4);
+        assert.isAtMost(totalKeys, 6);
+    });
+
     function delayResolve(data, delay) {
         return new Promise(resolve => setTimeout(() => resolve(data), delay));
     }
