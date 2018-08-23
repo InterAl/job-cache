@@ -8,7 +8,11 @@ function createCache() {
 
     function processJob(key, job) {
         try {
-            Promise.resolve(job.action()).then(result => {
+            const promisedJob = Promise.resolve(job.action());
+
+            runningJobs[key] = promisedJob;
+
+            promisedJob.then(result => {
                 cache[key] = {
                     result,
                     cooldown: job.cooldown,
@@ -26,6 +30,10 @@ function createCache() {
         }
     }
 
+    function hasElapsed(cachedEntry) {
+        return cachedEntry && cachedEntry.cooldown && new Date() - cachedEntry.lastRun > cachedEntry.cooldown;
+    }
+
     const api = {
         getAll() {
             return Object.keys(cache).reduce((acc, key) => {
@@ -34,26 +42,26 @@ function createCache() {
             }, {});
         },
         get(key) {
-            return cache[key] ? cache[key].result : null;
+            const cachedEntry = cache[key];
+
+            if (hasElapsed(cachedEntry)) {
+                return null;
+            }
+
+            return cachedEntry ? cachedEntry.result : null;
+        },
+        getWait(key) {
+            return this.get(key) || runningJobs[key];
         },
         add({key, action, cooldown}) {
             const cachedResult = cache[key];
             const jobExists = Boolean(runningJobs[key]);
 
             if (!jobExists) {
-                let cooldownElapsed = true;
-
-                if (cachedResult && cachedResult.cooldown) {
-                    cooldownElapsed = new Date() - cachedResult.lastRun > cachedResult.cooldown;
-                }
-
-                if (cooldownElapsed) {
-                    runningJobs[key] = true;
-                    processJob(key, {
-                        action,
-                        cooldown
-                    });
-                }
+                processJob(key, {
+                    action,
+                    cooldown
+                });
             }
         }
     };

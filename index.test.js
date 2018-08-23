@@ -78,32 +78,7 @@ describe('test', () => {
         });
     });
 
-    it('should not evaluate the 2nd job, given the cooldown was not elapsed', async () => {
-        cache.add({
-            key: 'foo',
-            action: () => 'r1',
-            cooldown: 500
-        });
-
-        await waitForAssert(() => {
-            assert.equal(cache.get('foo'), 'r1');
-        });
-
-        waitForCond.assertHold(() => {
-            assert.equal(cache.get('foo'), 'r1');
-        }, 400);
-
-        cache.add({
-            key: 'foo',
-            action: () => 'r2'
-        });
-
-        await waitForCond.assertHold(() => {
-            assert.equal(cache.get('foo'), 'r1');
-        }, 500);
-    });
-
-    it('should evaluate the 2nd job, given the cooldown was elapsed', async () => {
+    it('should update an entity value', async () => {
         cache.add({
             key: 'foo',
             action: () => 'r1',
@@ -116,7 +91,7 @@ describe('test', () => {
 
         await waitForCond.assertHold(() => {
             assert.equal(cache.get('foo'), 'r1');
-        }, 500);
+        }, 300);
 
         cache.add({
             key: 'foo',
@@ -180,17 +155,16 @@ describe('test', () => {
         });
     });
 
-    // it('getWait - a promised entity', async () => {
-    //     cache.add({
-    //         key: 'foo',
-    //         action: () => new Promise(resolve => setTimeout(() => resolve(42), 500))
-    //     });
-    //
-    //
-    //     const result = await cache.getWait('foo');
-    //
-    //     assert.equal(result, 42);
-    // });
+    it('getWait - a promised entity', async () => {
+        cache.add({
+            key: 'foo',
+            action: () => new Promise(resolve => setTimeout(() => resolve(42), 500))
+        });
+
+        const result = await cache.getWait('foo');
+
+        assert.equal(result, 42);
+    });
 
     function delayResolve(data, delay) {
         return new Promise(resolve => setTimeout(() => resolve(data), delay));
