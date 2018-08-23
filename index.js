@@ -1,4 +1,6 @@
-function createCache({requestsPerSecond} = {}) {
+const minBy = require('./minBy.js');
+
+function createCache({requestsPerSecond, maxCacheSize = Infinity} = {}) {
     const cache = {};
     const runningJobs = {};
     const queue = {};
@@ -50,6 +52,22 @@ function createCache({requestsPerSecond} = {}) {
         delete runningJobs[key];
     }
 
+    function removeLowestMru() {
+        const lowestMruKey = minBy(Object.keys(cache), key => cache[key].mruScore);
+        delete cache[lowestMruKey];
+    }
+
+    function addToCache(key, data) {
+        const cacheSizeExceeded = Object.keys(cache).length > maxCacheSize - 1;
+
+        if (cacheSizeExceeded) {
+            removeLowestMru();
+        }
+
+        cache[key] = data;
+        cache[key].mruScore = +new Date();
+    }
+
     function processJob(key, job) {
         try {
             const promisedJob = Promise.resolve(job.action());
@@ -57,11 +75,11 @@ function createCache({requestsPerSecond} = {}) {
             runningJobs[key] = promisedJob;
 
             promisedJob.then(result => {
-                cache[key] = {
+                addToCache(key, {
                     result,
                     cooldown: job.cooldown,
                     lastRun: new Date()
-                };
+                });
 
                 clearJob(key);
             }).catch(err => {
@@ -92,7 +110,12 @@ function createCache({requestsPerSecond} = {}) {
                 return null;
             }
 
-            return cachedEntry ? cachedEntry.result : null;
+            if (cachedEntry) {
+                cachedEntry.mruScore = +new Date();
+                return cachedEntry.result;
+            }
+
+            return null;
         },
         getWait(key) {
             return this.get(key) || runningJobs[key];
