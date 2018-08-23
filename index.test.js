@@ -162,6 +162,36 @@ describe('test', () => {
         });
     });
 
+    it('should return null, given a cached entity has expired', async () => {
+        cache.add({
+            key: 'foo',
+            action: () => 'r1',
+            cooldown: 50
+        });
+
+        await waitForAssert(() => {
+            assert.equal(cache.get('foo'), 'r1');
+        });
+
+        await (new Promise(resolve => setTimeout(resolve, 50)));
+
+        await waitForAssert(() => {
+            assert.equal(cache.get('foo'), null);
+        });
+    });
+
+    // it('getWait - a promised entity', async () => {
+    //     cache.add({
+    //         key: 'foo',
+    //         action: () => new Promise(resolve => setTimeout(() => resolve(42), 500))
+    //     });
+    //
+    //
+    //     const result = await cache.getWait('foo');
+    //
+    //     assert.equal(result, 42);
+    // });
+
     function delayResolve(data, delay) {
         return new Promise(resolve => setTimeout(() => resolve(data), delay));
     }
