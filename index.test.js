@@ -66,7 +66,7 @@ describe('test', () => {
 
         cache.add({
             key: 'foo',
-            action: () =>{
+            action: () => {
                 fn2Called = true;
                 return 'r2';
             }
@@ -100,22 +100,6 @@ describe('test', () => {
 
         await waitForAssert(() => {
             assert.equal(cache.get('foo'), 'r2');
-        });
-    });
-
-    it('should evaluate the 2nd job, given 1st job throwed an error', async () => {
-        cache.add({
-            key: 'foo',
-            action: () => {throw Error('Error');}
-        });
-
-        cache.add({
-            key: 'foo',
-            action: () => 42
-        });
-
-        await waitForAssert(() => {
-            assert.equal(cache.get('foo'), 42);
         });
     });
 
@@ -155,15 +139,24 @@ describe('test', () => {
         });
     });
 
-    it('getWait - a promised entity', async () => {
-        cache.add({
-            key: 'foo',
-            action: () => new Promise(resolve => setTimeout(() => resolve(42), 500))
+    it('requestsPerSec - limit the requests per second', async () => {
+        const cache = createCache({
+            requestsPerSecond: 5
         });
 
-        const result = await cache.getWait('foo');
+        for (let i = 0; i < 100; i++) {
+            cache.add({
+                key: i,
+                action: () => i,
+                cooldown: 10000
+            });
+        }
 
-        assert.equal(result, 42);
+        await delayResolve(undefined, 1000);
+
+        const totalKeys = Object.keys(cache.getAll()).length;
+        assert.isAtLeast(totalKeys, 4);
+        assert.isAtMost(totalKeys, 6);
     });
 
     it('requestsPerSec - limit the requests per second', async () => {
@@ -202,20 +195,7 @@ describe('test', () => {
         }
 
         return waitForAssert(() => {
-            assert.deepEqual(cache.getAll(), {
-                0: 0,
-                1: 1,
-                2: 2,
-                3: 3,
-                4: 4,
-                5: 5,
-                6: 6,
-                7: 7,
-                8: 8,
-                9: 9,
-                10: 10,
-                11: 11
-            })
+            assert.lengthOf(Object.keys(cache.getAll()), 12); 
         });
     });
 
